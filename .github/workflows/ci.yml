@@ -1,0 +1,99 @@
+# CI Pipeline for Headquarters
+#
+# Design decisions:
+#
+# 1. PARALLEL JOBS (not sequential steps)
+#    - Faster feedback: all checks run simultaneously
+#    - Clear failure attribution: easy to see what broke (lint vs test vs build)
+#    - Selective re-runs: can retry just the failed job
+#    - Trade-off: more runner minutes, but worth it for DX
+#
+# 2. FROZEN LOCKFILE
+#    - Ensures CI uses exact same versions as local dev
+#    - Fails fast if lockfile is out of sync with package.json
+#    - Prevents "works on my machine" issues
+#
+# 3. PNPM VERSION FROM package.json
+#    - Single source of truth (packageManager field)
+#    - pnpm/action-setup@v4 auto-detects it
+#    - Avoids version drift between local and CI
+#
+# 4. SEPARATE E2E JOB
+#    - Browser install is slow (~30s), only needed for E2E
+#    - Keeps other jobs fast
+#    - E2E failures don't block lint/type/unit feedback
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
