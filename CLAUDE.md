@@ -29,7 +29,9 @@ pnpm test:e2e:ui      # Playwright with UI
 ### Database
 
 ```bash
-cd docker && docker compose up -d  # Start PostgreSQL
+just nomad-up                      # Start PostgreSQL via Nomad (recommended)
+# Or standalone:
+just docker-up                     # Start PostgreSQL container only
 pnpm --filter @hq/db db:generate   # Generate migrations
 pnpm --filter @hq/db db:migrate    # Run migrations
 pnpm --filter @hq/db db:studio     # Open Drizzle Studio
