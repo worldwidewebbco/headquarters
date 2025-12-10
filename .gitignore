@@ -22,3 +22,10 @@ dist
 
 # Test coverage
 coverage
+
+# Playwright
+playwright-report
+test-results
+
+# Claude Code trace
+.claude-trace

@@ -115,6 +115,15 @@ The following are explicitly deferred for later design:
 3. **Temporal workflows** - Worker implementation when needed
 4. **Features** - No features defined yet, just infrastructure
 
+## Future Considerations
+
+Topics to explore in follow-up design sessions:
+
+1. **Nomad for orchestration** - Alternative/complement to Kubernetes for homelab deployment
+2. **Secrets management** - How to handle secrets (possibly git-encrypted with SOPS/age, or Vault, or Nomad's native secrets)
+3. **Environment variables strategy** - Standardized approach to `.env` files, env var naming, and configuration across all services
+4. **Service configuration patterns** - Ensure all services use consistent env var patterns for configuration
+
 ## Success Criteria
 
 The initial setup is complete when:
