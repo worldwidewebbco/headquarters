@@ -26,7 +26,6 @@ headquarters/
 │   ├── shared/     # Shared types and utilities
 │   └── ui/         # Shared React components
 └── infra/
-    ├── docker/     # Shared Dockerfile
     └── nomad/      # Nomad job specifications
 ```
 
@@ -64,32 +63,7 @@ just dev             # Start dev servers
 
 ### Available Commands
 
-Run `just` to see all available commands. Key commands:
-
-| Command | Description |
-|---------|-------------|
-| **Development** | |
-| `just dev` | Start apps directly (no containers) |
-| `just build` | Build all apps |
-| **Nomad** | |
-| `just nomad-up` | Start full stack via Nomad |
-| `just nomad-down` | Stop Nomad and all services |
-| `just nomad-status` | Show running Nomad jobs |
-| `just nomad-logs <service>` | Tail logs for a service |
-| `just nomad-restart <service>` | Restart a specific service |
-| `just nomad-ui` | Open Nomad UI in browser |
-| **Testing** | |
-| `just test` | Run unit tests |
-| `just test-e2e` | Run E2E tests (headless) |
-| `just test-e2e-ui` | Run E2E tests with interactive UI |
-| **Code Quality** | |
-| `just lint` | Lint all files |
-| `just format` | Format all files |
-| `just typecheck` | Type-check all packages |
-| `just check` | Run lint + typecheck |
-| **Database** | |
-| `just db-migrate` | Run database migrations |
-| `just db-studio` | Open Drizzle Studio |
+Run `just` to see all available commands with descriptions.
 
 ### Development URLs
 

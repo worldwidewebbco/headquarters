@@ -59,3 +59,9 @@ pnpm --filter @hq/db db:studio     # Open Drizzle Studio
 - **Formatter:** Biome with tabs, single quotes, no semicolons
 - **Line width:** 100 characters
 - **Imports:** Auto-organized by Biome
+
+## Development Practices
+
+- **No sleep hacks:** Never use hardcoded `sleep` for timing/synchronization, even in dev scripts. Use proper health checks, polling with conditions, or dependency mechanisms instead.
+- **Single source of truth:** Commands are documented in `justfile` with comments. Run `just` to see all available commands. Don't duplicate command lists in README or other docs.
+- **Dynamic over hardcoded:** Prefer dynamic discovery (glob patterns, querying state) over hardcoded lists that need manual updates.
