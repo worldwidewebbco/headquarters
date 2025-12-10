@@ -97,3 +97,17 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
+
+  # Rollup job for branch protection - reports single "CI" status
+  # NOTE: When adding new jobs, add them to the 'needs' array below
+  ci:
+    name: CI
+    needs: [lint, typecheck, test, build, e2e]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check all jobs passed
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+        run: exit 1
+      - name: All checks passed
+        run: echo "All checks passed"
