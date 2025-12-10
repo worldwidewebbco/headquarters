@@ -58,20 +58,100 @@ typecheck:
 check: lint typecheck
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Docker
+# Nomad (Local Orchestration)
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Start PostgreSQL container
-docker-up:
-    docker compose -f docker/docker-compose.yml up -d
+# Start Nomad agent in dev mode (background)
+nomad-agent:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Starting Nomad agent in dev mode..."
+    nomad agent -dev -bind=127.0.0.1 > /tmp/nomad.log 2>&1 &
+    # Wait for Nomad API to be ready
+    for i in {1..30}; do
+        if nomad status &>/dev/null; then
+            echo "Nomad agent started. UI: http://localhost:4646"
+            exit 0
+        fi
+        sleep 0.5
+    done
+    echo "Error: Nomad agent failed to start"
+    exit 1
 
-# Stop PostgreSQL container
-docker-down:
-    docker compose -f docker/docker-compose.yml down
+# Stop Nomad agent
+nomad-agent-stop:
+    @pkill -f "nomad agent -dev" || true
+    @echo "Nomad agent stopped"
 
-# View PostgreSQL container logs
-docker-logs:
-    docker compose -f docker/docker-compose.yml logs -f
+# Wait for PostgreSQL to be ready
+[private]
+wait-postgres:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Waiting for PostgreSQL..."
+    for i in {1..60}; do
+        if nc -z localhost 5432 2>/dev/null; then
+            echo "PostgreSQL is ready"
+            exit 0
+        fi
+        sleep 0.5
+    done
+    echo "Error: PostgreSQL failed to start within 30s"
+    exit 1
+
+# Start all services with Nomad (dynamically discovers job files)
+nomad-up: nomad-agent
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Starting services..."
+
+    # Start postgres first (infrastructure)
+    nomad job run {{justfile_directory()}}/infra/nomad/jobs/postgres.nomad
+
+    # Wait for postgres to be healthy
+    just wait-postgres
+
+    # Start all other jobs dynamically
+    for job in {{justfile_directory()}}/infra/nomad/jobs/*.nomad; do
+        [[ "$(basename "$job")" == "postgres.nomad" ]] && continue
+        nomad job run -var="project_dir={{justfile_directory()}}" "$job"
+    done
+
+    echo ""
+    echo "All services started!"
+    echo "  Web:      http://localhost:3000"
+    echo "  API:      http://localhost:3001"
+    echo "  Nomad UI: http://localhost:4646"
+
+# Stop all services and Nomad agent (dynamically discovers running jobs)
+nomad-down:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Stopping services..."
+
+    # Get all running jobs and stop them
+    for job in $(nomad job status -short 2>/dev/null | tail -n +2 | awk '{print $1}'); do
+        echo "Stopping $job..."
+        nomad job stop -purge "$job" 2>/dev/null || true
+    done
+
+    just nomad-agent-stop
+
+# Show Nomad job status
+nomad-status:
+    @nomad job status
+
+# Tail logs for a specific service
+nomad-logs service:
+    nomad alloc logs -job {{service}} -f
+
+# Restart a specific service
+nomad-restart service:
+    nomad job restart {{service}}
+
+# Open Nomad UI in browser
+nomad-ui:
+    open http://localhost:4646
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Database
@@ -101,8 +181,7 @@ db-studio:
 install:
     pnpm install
 
-# Full project setup (install deps, start docker, push schema)
-setup: install docker-up
-    @echo "Waiting for PostgreSQL to be ready..."
-    @sleep 2
+# Full project setup (install deps, start nomad, push schema)
+setup: install
+    just nomad-up
     just db-push

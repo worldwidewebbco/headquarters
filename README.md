@@ -9,6 +9,7 @@ Personal homelab dashboard and workspace.
 - **Frontend:** Next.js 15, React 19, Tailwind CSS 4
 - **API:** tRPC (end-to-end type safety)
 - **Database:** PostgreSQL with Drizzle ORM
+- **Orchestration:** HashiCorp Nomad (local dev)
 - **Testing:** Vitest (unit), Playwright (E2E)
 - **Tooling:** Biome (lint/format), Turbo (build), Husky (git hooks), Just (task runner)
 
@@ -24,7 +25,8 @@ headquarters/
 │   ├── db/         # Database schema and client
 │   ├── shared/     # Shared types and utilities
 │   └── ui/         # Shared React components
-└── docker/         # Docker Compose for local services
+└── infra/
+    └── nomad/      # Nomad job specifications
 ```
 
 ## Getting Started
@@ -33,46 +35,43 @@ headquarters/
 
 - Node.js 22+
 - pnpm 9+
-- Docker (for PostgreSQL)
+- Docker (OrbStack, Docker Desktop, or Colima)
 - [Just](https://just.systems) (task runner)
+- [Nomad](https://developer.hashicorp.com/nomad/install) (orchestration)
 
-### Setup
+### Installation
 
 ```bash
-# Full setup (install deps, start docker, push schema)
-just setup
+# Install Nomad (macOS)
+brew install nomad
 
-# Or manually:
-just install      # Install dependencies
-just docker-up    # Start PostgreSQL
-just db-push      # Push schema to database
-just dev          # Start development servers
+# Install Just (if not installed)
+brew install just
+```
+
+### Development
+
+```bash
+# Full stack with Nomad (recommended)
+just nomad-up        # Start all services via Nomad
+just nomad-down      # Stop all services
+
+# Or run directly without containers
+just setup           # Install deps, start Postgres, push schema
+just dev             # Start dev servers
 ```
 
 ### Available Commands
 
-Run `just` to see all available commands. Key commands:
-
-| Command | Description |
-|---------|-------------|
-| `just dev` | Start all apps in development mode |
-| `just build` | Build all apps |
-| `just test` | Run unit tests |
-| `just test-e2e` | Run E2E tests (headless) |
-| `just test-e2e-ui` | Run E2E tests with interactive UI |
-| `just lint` | Lint all files |
-| `just format` | Format all files |
-| `just typecheck` | Type-check all packages |
-| `just check` | Run lint + typecheck |
-| `just docker-up` | Start PostgreSQL container |
-| `just docker-down` | Stop PostgreSQL container |
-| `just db-migrate` | Run database migrations |
-| `just db-studio` | Open Drizzle Studio |
+Run `just` to see all available commands with descriptions.
 
 ### Development URLs
 
-- **Web:** http://localhost:3000
-- **API:** http://localhost:3001
+| Service | URL |
+|---------|-----|
+| Web | http://localhost:3000 |
+| API | http://localhost:3001 |
+| Nomad UI | http://localhost:4646 |
 
 ## License
 

@@ -30,3 +30,6 @@ test-results
 
 # Claude Code trace
 .claude-trace
+
+# Worktrees
+.worktrees/
