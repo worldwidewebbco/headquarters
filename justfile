@@ -58,22 +58,6 @@ typecheck:
 check: lint typecheck
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Docker
-# ─────────────────────────────────────────────────────────────────────────────
-
-# Start PostgreSQL container
-docker-up:
-    docker compose -f docker/docker-compose.yml up -d
-
-# Stop PostgreSQL container
-docker-down:
-    docker compose -f docker/docker-compose.yml down
-
-# View PostgreSQL container logs
-docker-logs:
-    docker compose -f docker/docker-compose.yml logs -f
-
-# ─────────────────────────────────────────────────────────────────────────────
 # Nomad (Local Orchestration)
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -161,8 +145,9 @@ db-studio:
 install:
     pnpm install
 
-# Full project setup (install deps, start docker, push schema)
-setup: install docker-up
+# Full project setup (install deps, start nomad, push schema)
+setup: install
+    just nomad-up
     @echo "Waiting for PostgreSQL to be ready..."
-    @sleep 2
+    @sleep 3
     just db-push
