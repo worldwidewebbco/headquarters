@@ -99,6 +99,7 @@ jobs:
       - run: pnpm test:e2e
 
   # Rollup job for branch protection - reports single "CI" status
+  # NOTE: When adding new jobs, add them to the 'needs' array below
   ci:
     name: CI
     needs: [lint, typecheck, test, build, e2e]
@@ -106,13 +107,7 @@ jobs:
     if: always()
     steps:
       - name: Check all jobs passed
-        run: |
-          if [[ "${{ needs.lint.result }}" != "success" ]] || \
-             [[ "${{ needs.typecheck.result }}" != "success" ]] || \
-             [[ "${{ needs.test.result }}" != "success" ]] || \
-             [[ "${{ needs.build.result }}" != "success" ]] || \
-             [[ "${{ needs.e2e.result }}" != "success" ]]; then
-            echo "One or more jobs failed"
-            exit 1
-          fi
-          echo "All checks passed"
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+        run: exit 1
+      - name: All checks passed
+        run: echo "All checks passed"
