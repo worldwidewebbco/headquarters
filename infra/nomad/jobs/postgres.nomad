@@ -36,13 +36,13 @@ job "postgres" {
       }
 
       service {
-        name = "postgres"
-        port = "db"
+        name     = "postgres"
+        port     = "db"
+        provider = "nomad"
 
         check {
-          type     = "script"
-          command  = "pg_isready"
-          args     = ["-U", "postgres"]
+          type     = "tcp"
+          port     = "db"
           interval = "5s"
           timeout  = "2s"
         }

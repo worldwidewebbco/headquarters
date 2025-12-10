@@ -11,25 +11,16 @@ job "worker" {
     count = 1
 
     task "worker" {
-      driver = "docker"
+      driver = "raw_exec"
 
       config {
-        image   = "hq-dev:latest"
-        command = "pnpm"
-        args    = ["--filter", "@hq/worker", "dev"]
-
-        # Mount source code for hot reload
-        volumes = [
-          "${var.project_dir}:/app",
-        ]
-
-        # Working directory
-        work_dir = "/app"
+        command = "/bin/sh"
+        args    = ["-c", "cd ${var.project_dir} && pnpm --filter @hq/worker dev"]
       }
 
       env {
         NODE_ENV     = "development"
-        DATABASE_URL = "postgresql://postgres:postgres@host.docker.internal:5432/headquarters"
+        DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/headquarters"
       }
 
       resources {

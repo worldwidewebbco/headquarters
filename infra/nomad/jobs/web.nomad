@@ -17,27 +17,16 @@ job "web" {
     }
 
     task "web" {
-      driver = "docker"
+      driver = "raw_exec"
 
       config {
-        image   = "hq-dev:latest"
-        ports   = ["http"]
-        command = "pnpm"
-        args    = ["--filter", "@hq/web", "dev"]
-
-        # Mount source code for hot reload
-        volumes = [
-          "${var.project_dir}:/app",
-        ]
-
-        # Working directory
-        work_dir = "/app"
+        command = "/bin/sh"
+        args    = ["-c", "cd ${var.project_dir} && pnpm --filter @hq/web dev"]
       }
 
       env {
-        NODE_ENV = "development"
-        PORT     = "3000"
-        # API URL for tRPC client
+        NODE_ENV            = "development"
+        PORT                = "3000"
         NEXT_PUBLIC_API_URL = "http://localhost:3001"
       }
 
@@ -47,12 +36,13 @@ job "web" {
       }
 
       service {
-        name = "web"
-        port = "http"
+        name     = "web"
+        port     = "http"
+        provider = "nomad"
 
         check {
-          type     = "http"
-          path     = "/"
+          type     = "tcp"
+          port     = "http"
           interval = "10s"
           timeout  = "2s"
         }

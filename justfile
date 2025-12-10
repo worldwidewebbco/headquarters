@@ -61,10 +61,6 @@ check: lint typecheck
 # Nomad (Local Orchestration)
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Build dev Docker image for Nomad
-nomad-build:
-    docker build -f infra/docker/Dockerfile --target dev -t hq-dev:latest .
-
 # Start Nomad agent in dev mode (background)
 nomad-agent:
     @echo "Starting Nomad agent in dev mode..."
@@ -78,9 +74,9 @@ nomad-agent-stop:
     @echo "Nomad agent stopped"
 
 # Start all services with Nomad
-nomad-up: nomad-build nomad-agent
+nomad-up: nomad-agent
     @echo "Starting services..."
-    nomad job run -var="project_dir={{justfile_directory()}}" infra/nomad/jobs/postgres.nomad
+    nomad job run infra/nomad/jobs/postgres.nomad
     @echo "Waiting for PostgreSQL..."
     @sleep 3
     nomad job run -var="project_dir={{justfile_directory()}}" infra/nomad/jobs/api.nomad
