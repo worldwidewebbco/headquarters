@@ -74,6 +74,66 @@ docker-logs:
     docker compose -f docker/docker-compose.yml logs -f
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Nomad (Local Orchestration)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Build dev Docker image for Nomad
+nomad-build:
+    docker build -f infra/docker/Dockerfile --target dev -t hq-dev:latest .
+
+# Start Nomad agent in dev mode (background)
+nomad-agent:
+    @echo "Starting Nomad agent in dev mode..."
+    @nomad agent -dev -bind=127.0.0.1 > /tmp/nomad.log 2>&1 &
+    @sleep 2
+    @echo "Nomad agent started. UI: http://localhost:4646"
+
+# Stop Nomad agent
+nomad-agent-stop:
+    @pkill -f "nomad agent -dev" || true
+    @echo "Nomad agent stopped"
+
+# Start all services with Nomad
+nomad-up: nomad-build nomad-agent
+    @echo "Starting services..."
+    nomad job run -var="project_dir={{justfile_directory()}}" infra/nomad/jobs/postgres.nomad
+    @echo "Waiting for PostgreSQL..."
+    @sleep 3
+    nomad job run -var="project_dir={{justfile_directory()}}" infra/nomad/jobs/api.nomad
+    nomad job run -var="project_dir={{justfile_directory()}}" infra/nomad/jobs/web.nomad
+    nomad job run -var="project_dir={{justfile_directory()}}" infra/nomad/jobs/worker.nomad
+    @echo ""
+    @echo "All services started!"
+    @echo "  Web:      http://localhost:3000"
+    @echo "  API:      http://localhost:3001"
+    @echo "  Nomad UI: http://localhost:4646"
+
+# Stop all services and Nomad agent
+nomad-down:
+    @echo "Stopping services..."
+    @nomad job stop -purge web 2>/dev/null || true
+    @nomad job stop -purge api 2>/dev/null || true
+    @nomad job stop -purge worker 2>/dev/null || true
+    @nomad job stop -purge postgres 2>/dev/null || true
+    just nomad-agent-stop
+
+# Show Nomad job status
+nomad-status:
+    @nomad job status
+
+# Tail logs for a specific service
+nomad-logs service:
+    nomad alloc logs -job {{service}} -f
+
+# Restart a specific service
+nomad-restart service:
+    nomad job restart {{service}}
+
+# Open Nomad UI in browser
+nomad-ui:
+    open http://localhost:4646
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Database
 # ─────────────────────────────────────────────────────────────────────────────
 
