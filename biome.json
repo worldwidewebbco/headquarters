@@ -27,7 +27,6 @@
 	},
 	"css": {
 		"parser": {
-			"cssModules": true,
 			"tailwindDirectives": true
 		}
 	},
