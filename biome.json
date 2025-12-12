@@ -25,6 +25,12 @@
 			"semicolons": "asNeeded"
 		}
 	},
+	"css": {
+		"parser": {
+			"cssModules": true,
+			"tailwindDirectives": true
+		}
+	},
 	"files": {
 		"includes": [
 			"**",
